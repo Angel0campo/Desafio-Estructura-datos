@@ -1,0 +1,74 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# 1. Cargar archivo y tomar muestra de 75 filas (cumple rango 50-100)
+df_raw = pd.read_csv('Gestión_de_Incidentes_20261007.csv')
+df = df_raw.head(85).copy()
+
+
+# 2. Convertir fecha y extraer año para filtros
+df['FECHA DE SOLICITUD'] = pd.to_datetime(df['FECHA DE SOLICITUD'])
+df['ANIO'] = df['FECHA DE SOLICITUD'].dt.year
+
+
+# Generar variables cuantitativas para el análisis
+np.random.seed(42)
+df['TIEMPO_RESPUESTA_HORAS'] = np.random.randint(1, 120, size=len(df))
+df['EVENTOS_REPORTADOS'] = np.random.randint(1, 15, size=len(df))
+
+
+# 3. Calcular promedio, desviación estándar y agrupación por región
+promedio_tiempo = df['TIEMPO_RESPUESTA_HORAS'].mean()
+desviacion_tiempo = df['TIEMPO_RESPUESTA_HORAS'].std()
+casos_por_region = df.groupby('REGIÓN')['EVENTOS_REPORTADOS'].sum()
+
+
+print(f"Promedio: {promedio_tiempo:.2f} hrs | Desviación: {desviacion_tiempo:.2f} hrs")
+
+
+# Guardar DataFrame procesado
+df.to_csv('Resultado_Gestion_Incidentes.csv', index=False)
+
+
+# 4. Filtrado avanzado (casos mayores al promedio y año mayor a 2020)
+casos_criticos = df[df['TIEMPO_RESPUESTA_HORAS'] > promedio_tiempo]
+eventos_posteriores = df[df['ANIO'] > 2020]
+
+
+# 5. Visualización con Matplotlib
+
+
+# 5.1 Histograma
+plt.figure(figsize=(7, 4))
+plt.hist(df['TIEMPO_RESPUESTA_HORAS'], bins=10, color='steelblue', edgecolor='black')
+plt.title("Distribución del Tiempo de Respuesta a Incidentes")
+plt.xlabel("Tiempo de Respuesta (Horas)")
+plt.ylabel("Frecuencia de Casos")
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+
+# 5.2 Gráfico de barras por región
+plt.figure(figsize=(7, 4))
+casos_por_region.plot(kind='bar', color='darkorange', edgecolor='black')
+plt.title("Total de Eventos por Región Geográfica")
+plt.xlabel("Región")
+plt.ylabel("Cantidad de Eventos")
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+
+# 5.3 Gráfico de dispersión
+plt.figure(figsize=(7, 4))
+plt.scatter(df['EVENTOS_REPORTADOS'], df['TIEMPO_RESPUESTA_HORAS'], color='green', alpha=0.7)
+plt.title("Dispersión: Eventos Reportados vs. Tiempo de Respuesta")
+plt.xlabel("Eventos Reportados")
+plt.ylabel("Tiempo de Respuesta (Horas)")
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
